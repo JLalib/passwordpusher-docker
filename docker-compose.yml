@@ -1,0 +1,24 @@
+version: '3.8'
+
+services:
+  pwpush:
+    image: pglombardo/pwpush:latest
+    container_name: passwordpusher
+    restart: unless-stopped
+    ports:
+      - "443:443"
+      - "80:80"
+    volumes:
+      - pwpush-storage:/opt/PasswordPusher/storage
+    environment:
+      # Domain para Let's Encrypt (IMPORTANTE)
+      - TLS_DOMAIN=secrets.tudominio.com
+      # Encryption key (generar: openssl rand -hex 32)
+      - PWPUSH_MASTER_KEY=your-random-32-char-hex-key-here
+      # Email (para notificaciones)
+      - PWPUSH_ENABLE_USER_ACCOUNT_EMAILS=false
+      # Logging
+      - PWP__LOG_LEVEL=info
+
+volumes:
+  pwpush-storage:
