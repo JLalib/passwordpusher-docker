@@ -188,4 +188,4 @@ Este proyecto se basa en [PasswordPusher](https://github.com/pglombardo/Password
 
 ---
 
-> ✨ **Nota**: Este repositorio contiene la configuración Docker y documentación extraída del tutorial de Genbyte: [Cómo instalar PasswordPusher en Docker - Compartidor seguro de contraseñas autohospedado en Docker](https://genbyte.blogspot.com/2026/07/como-instalar-passwordpusher-en-docker.html)
+> ✨ **Nota**: Este repositorio contiene la configuración Docker y documentación extraída del tutorial de Genbyte: <a href="https://genbyte.blogspot.com/2026/07/como-instalar-passwordpusher-en-docker.html" target="_blank" rel="noopener noreferrer">Cómo instalar PasswordPusher en Docker - Compartidor seguro de contraseñas autohospedado en Docker</a>
