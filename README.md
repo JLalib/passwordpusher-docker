@@ -1,43 +1,78 @@
-# 🔐 PasswordPusher: Compartidor seguro de contraseñas y secretos con Docker
+# 🔐 PasswordPusher Docker - Compartidor Seguro de Contraseñas Autohospedado
 
-[![GitHub](https://img.shields.io/badge/GitHub-Repositorio-blue)](https://github.com/JLalib/passwordpusher-docker) [![Docker](https://img.shields.io/badge/Docker-PasswordPusher-blue)](https://hub.docker.com/r/pglombardo/pwpush) [![License](https://img.shields.io/badge/Licencia-MIT-green)](https://github.com/JLalib/passwordpusher-docker/blob/main/LICENSE)
+[![GitHub](https://img.shields.io/badge/GitHub-Repository-blue?logo=github)](https://github.com/pglombardo/PasswordPusher)
+[![Docker](https://img.shields.io/badge/Docker-pglombardo%2Fpwpush-blue?logo=docker)](https://hub.docker.com/r/pglombardo/pwpush)
+[![License](https://img.shields.io/badge/License-Apache%202.0-green)](https://github.com/pglombardo/PasswordPusher/blob/master/LICENSE)
 
 ## 📋 Descripción general
 
-PasswordPusher es una herramienta minimalista de código abierto para compartir contraseñas, notas, URLs y archivos de forma segura, sin dejarlos en canales públicos como Slack, email o chat inseguro. Generas un link que se auto-destruye tras un número de vistas o un tiempo determinado, con auditoría completa de accesos.
+**PasswordPusher** es una herramienta minimalista y open source para compartir secretos de forma segura sin dejarlos en canales públicos como Slack, email o chat inseguro. En lugar de enviar contraseñas por canales inseguros, generas un link que se auto-destruye después de X vistas o tiempo. El secreto nunca toca email o chat: generas un link seguro, el destinatario lo accede, y después de la expiración se borra permanentemente.
 
-Este repositorio contiene la configuración necesaria para desplegar PasswordPusher con Docker Compose, siguiendo el tutorial de Genbyte para dejar de compartir secretos por canales inseguros.
+Características clave:
+- 🔒 **Encriptación AES-256 en reposo** + HTTPS en tránsito
+- ⏱️ **Expiración flexible**: por vistas (ej: 1 view) o por tiempo (ej: 24 horas)
+- 📊 **Audit logging completo**: quién vio, cuándo, IP address, navegador
+- 👥 **Multi-usuario** con login y panel de administración
+- 🤖 **JSON API + CLI oficial** (`pwpush-cli`) para automatización
+- 🌐 **31 idiomas** y tema customizable (white-label)
+- 🐳 **Docker one-liner deployment** con HTTPS automático vía Let's Encrypt
+- 📜 **Apache 2.0 open source** - sin telemetría, auditable
 
 ## ✨ Características principales
 
-- **Compartidor de secretos**: contraseñas, notas, URLs y archivos, todo encriptado y con auto-expiración
-- **Expiración flexible**: por vistas (ej. 1 vista), por tiempo (ej. 24 horas), o ambos combinados
-- **Encriptación AES-256**: en reposo, y HTTPS en tránsito; los datos nunca viajan en texto plano
-- **Passphrase adicional**: capa extra de seguridad, además del propio link
-- **Audit logging completo**: quién vio el secreto, cuándo, desde qué IP y navegador
-- **Multi-usuario con login**: cuentas de equipo, cada usuario gestiona sus propios pushes
-- **JSON API + CLI oficial**: automatiza desde scripts o terminal con `pwpush-cli`
-- **Webhooks**: notificaciones al Slack, Teams, etc. cuando alguien accede a un push
-- **31 idiomas**: interfaz multilingüe traducida vía Translation.io
-- **HTTPS automático**: certificado Let's Encrypt vía variable `TLS_DOMAIN`
-- **Open source Apache 2.0**: sin telemetría, totalmente auditable
+- **Compartidor de secretos**: Contraseñas, notas, URLs, archivos - todo encriptado y auto-expira
+- **Expiración flexible**: Por vistas (ej: 1 view) o por tiempo (ej: 1 hour, 1 day) - o ambos
+- **Encriptación AES-256**: En reposo. HTTPS en tránsito. Datos nunca en texto plano
+- **Passphrase adicional**: Capa extra - link + passphrase para acceder
+- **Audit logging completo**: Quién vio, cuándo, IP address, navegador - tracking exhaustivo
+- **Multi-usuario + login**: Equipos con cuentas. Cada usuario ve sus pushes
+- **JSON API**: Integra con curl, scripts, tools - automatización completa
+- **CLI oficial (pwpush-cli)**: Comparte secrets desde terminal - pipe-friendly
+- **Webhooks**: Notificaciones cuando se accede - integra con Slack, Teams, etc.
+- **HTTPS automático**: Let's Encrypt vía variable `TLS_DOMAIN` - setup en segundos
+- **31 idiomas**: UI multilingüe - Translation.io powered
+- **Open source Apache 2.0**: Sin telemetría, sin black box, auditable
 
 ## 📋 Requisitos del sistema
 
-- Docker y Docker Compose instalados
-- Al menos 512 MB - 1 GB de RAM (Ruby on Rails es ligero)
-- 1-2 GB de espacio en disco (según volumen de pushes)
-- Puerto 443 disponible para HTTPS (recomendado), o puerto 80
-- Modo ephemeral (sin base de datos, no persiste) o modo producción con PostgreSQL/MySQL
-- Un dominio propio si quieres usar `TLS_DOMAIN` para HTTPS automático
+- **Docker** y **Docker Compose** instalados
+- **512 MB - 1 GB RAM** (Ruby on Rails es ligero)
+- **1-2 GB espacio disco** (depende del volumen de pushes)
+- **Puerto 443** (HTTPS, recomendado) o **80** (HTTP)
+- **Opción 1 (ephemeral)**: Sin DB, datos en memoria (no persiste entre restarts)
+- **Opción 2 (production)**: PostgreSQL o MySQL para persistencia
+- **TLS_DOMAIN**: Dominio para Let's Encrypt (ej: `secrets.tudominio.com`)
+- **PWPUSH_MASTER_KEY** (recomendado): Key de encriptación custom (generar con `openssl rand -hex 32`)
 
 ## 🐳 Instalación
 
-### Docker Compose (Método recomendado)
+### Opción 1: Ephemeral (sin DB, rápido pero sin persistencia)
 
-Crea un archivo `docker-compose.yml` con el siguiente contenido:
+```bash
+docker run -d \
+  --name passwordpusher \
+  --restart unless-stopped \
+  -p 5100:5100 \
+  pglombardo/pwpush-ephemeral:release
+```
 
-```yaml
+Acceso: `http://localhost:5100` - Dashboard. **Datos NO persisten entre restarts.**
+
+---
+
+### Opción 2: Production con PostgreSQL (recomendado - oficial)
+
+```bash
+curl -s -o docker-compose.yml https://raw.githubusercontent.com/pglombardo/PasswordPusher/master/containers/docker/pwpush-postgres/docker-compose.yml
+docker compose up -d
+```
+
+---
+
+### Opción 3: Docker Compose custom con HTTPS automático (Let's Encrypt)
+
+```bash
+cat > docker-compose.yml << 'EOF'
 version: '3.8'
 
 services:
@@ -62,130 +97,120 @@ services:
 
 volumes:
   pwpush-storage:
-```
+EOF
 
-Luego, inicia el servicio:
-
-```bash
 docker compose up -d
 ```
 
-💡 Alternativa rápida sin persistencia (modo ephemeral, ideal para pruebas):
-
-```bash
-docker run -d \
-  --name passwordpusher \
-  --restart unless-stopped \
-  -p 5100:5100 \
-  pglombardo/pwpush-ephemeral:release
-```
-
-## ⚙️ Configuración
-
-Antes de iniciar el contenedor, debes editar el archivo `docker-compose.yml` para establecer tus valores:
-
-1. **TLS_DOMAIN**: dominio propio para el certificado automático de Let's Encrypt (ej. `secrets.tudominio.com`)
-2. **PWPUSH_MASTER_KEY**: clave de encriptación personalizada, genérala con `openssl rand -hex 32`
-3. **PWPUSH_ENABLE_USER_ACCOUNT_EMAILS**: activa o desactiva las notificaciones por email
-4. **PWP__LOG_LEVEL**: nivel de detalle de los logs (`info`, `debug`, etc.)
-
-💡 Consejo: genera siempre una `PWPUSH_MASTER_KEY` aleatoria y única, no uses el valor de ejemplo.
+### Generar `PWPUSH_MASTER_KEY`
 
 ```bash
 openssl rand -hex 32
-# Copia el resultado y reemplázalo en docker-compose.yml
+# Copia resultado y reemplaza en docker-compose.yml
 ```
+
+### Acceder
+
+```
+https://secrets.tudominio.com
+```
+Dashboard PasswordPusher con **HTTPS automático** vía Let's Encrypt.
+
+## ⚙️ Configuración
+
+1. **TLS_DOMAIN**: Tu dominio/subdominio (ej: `secrets.tudominio.com`) - obligatorio para HTTPS automático
+2. **PWPUSH_MASTER_KEY**: Clave de encriptación de 32 chars hex - generar con `openssl rand -hex 32`
+3. **PWPUSH_ENABLE_USER_ACCOUNT_EMAILS**: `true`/`false` - habilita emails para recuperación de cuenta
+4. **PWP__LOG_LEVEL**: `debug`, `info`, `warn`, `error` - nivel de logging
+5. **PWP__PURGE_AFTER**: Ej: `"2 weeks"` - purga automática de pushes expirados
+5. **Puertos**: 443 (HTTPS) y 80 (HTTP para challenge Let's Encrypt) deben estar abiertos en firewall/router
 
 ## 🚀 Primeros pasos
 
-1. Asegúrate de tener Docker y Docker Compose instalados en tu sistema
-2. Clona este repositorio o copia el archivo `docker-compose.yml` a tu servidor
-3. Edita el archivo `docker-compose.yml` y reemplaza:
-   - `secrets.tudominio.com` por tu dominio real
-   - `your-random-32-char-hex-key-here` por tu clave generada con `openssl rand -hex 32`
-4. Ejecuta `docker compose up -d` para iniciar el contenedor
-5. Abre tu navegador en `https://secrets.tudominio.com` (HTTPS automático vía Let's Encrypt)
-6. Crea tu primer push:
-   - Click en "Create a Push"
-   - Pega el secreto (contraseña, URL o nota)
-   - Configura la expiración: vistas y/o tiempo
-   - Opcional: añade una passphrase
-   - Click en "Push It" y comparte el link generado
+1. **Crear primer push (desde web)**
+   - Abre `https://secrets.tudominio.com`
+   - Click **"Create a Push"**
+   - Pega secreto: contraseña, URL, nota, o contenido de archivo
+   - Set expiry: número de vistas (ej: `1`) + duración (ej: `1 hour`, `1 day`)
+   - Opcional: agregar **passphrase** para capa extra
+   - Click **"Push It"**
+   - Copia link seguro generado
+   - Comparte link con recipient (sin compartir passphrase por ese canal)
+
+2. **Recipient accede**
+   - Recipient abre link
+   - Si hay passphrase, la introduce
+   - Ve el secreto
+   - Link se auto-destruye (1 view usado)
+   - Futuro acceso: *"This push has expired"*
+
+3. **Ver audit log**
+   - Dashboard → tu push
+   - Verás: quién vio, cuándo, IP address, navegador
+   - Tracking exhaustivo
+
+4. **Usar CLI (pwpush-cli)**
+   ```bash
+   # Instalar CLI
+   pip install pwpush
+   
+   # Compartir secreto desde terminal
+   pwpush push --secret "my-password" --days 1 --views 3
+   # Resultado: https://secrets.tudominio.com/p/abc123xyz
+   ```
+
+5. **Usar API (curl)**
+   ```bash
+   curl -X POST https://secrets.tudominio.com/api/v1/pushes \
+     -H "Content-Type: application/json" \
+     -d '{ "push": { "payload": "my-secret-password", "expire_after_views": 1, "expire_after_days": 1 } }'
+   ```
+
+6. **Agregar multi-usuario**
+   - Settings → Users (si estás en admin)
+   - Crea usuarios para equipo
+   - Cada usuario: su view de pushes
+   - Auditoría: quién creó qué
 
 ## 💡 Casos de uso
 
-- **DevOps/SRE**: compartir credenciales temporales, API keys o contraseñas de bases de datos de forma segura
-- **Equipos remotos**: onboarding seguro, sin distribuir credenciales por WhatsApp o email
-- **Soporte IT**: compartir contraseñas con clientes sin dejar historial permanente
-- **Compliance-heavy**: auditoría completa de quién vio qué, cuándo y desde dónde
-- **Terceros/Contractors**: accesos temporales que caducan automáticamente
+- **DevOps/SRE**: Compartir credenciales temporales, API keys, database passwords de forma segura
+- **Equipos remotos**: Onboarding seguro. Distribuir credenciales sin WhatsApp/email
+- **Soporte IT**: Share passwords con clientes sin historial permanente
+- **Compliance-heavy**: Auditoría completa: quién vio qué, cuándo, desde dónde
+- **Terceros/Contractors**: Temporary access credentials que auto-expiran
 
-## 🔒 Acceso remoto seguro (opcional)
+## 🔒 Acceso remoto seguro
 
-Si prefieres usar Caddy como proxy inverso en lugar de dejar que PasswordPusher gestione su propio TLS, puedes hacerlo así.
+PasswordPusher maneja **HTTPS nativo** vía `TLS_DOMAIN` (Let's Encrypt automático). Es la opción recomendada.
 
-### Configuración Caddyfile (ejemplo)
+**Alternativa: Caddy como reverse proxy** (si prefieres gestionar certs externamente):
 
-```
+```caddy
 secrets.tudominio.com {
     reverse_proxy localhost:5100
-    encode gzip
 }
 ```
 
-### Pasos para acceso seguro
-
-1. Instala y configura Caddy, Nginx Proxy Manager o Traefik en tu servidor
-2. Obtén un certificado SSL gratuito de Let's Encrypt (Caddy lo hace automáticamente)
-3. Configura el proxy inverso para apuntar a `localhost:5100`
-4. Accede a PasswordPusher a través de tu dominio seguro (<https://secrets.tudominio.com>)
-
-📝 Nota: PasswordPusher puede gestionar su propio HTTPS de forma nativa vía la variable `TLS_DOMAIN`. Usa Caddy solo si prefieres administrar los certificados externamente.
+> **Nota**: Mejor dejar que PasswordPusher maneje su propio TLS vía variable de entorno `TLS_DOMAIN`. Caddy es backup si prefieres manage certs externamente.
 
 ## 🛠️ Gestión y mantenimiento
 
-### Ver registros
-
-```bash
-docker compose logs -f pwpush
-```
-
-### Actualizar a la última versión
-
-```bash
-docker compose pull
-docker compose up -d
-```
-
-### Reiniciar servicios
-
-```bash
-docker compose restart
-```
-
-### Ver estado de salud
-
-```bash
-docker stats passwordpusher
-```
-
-### Backup de datos (si usas PostgreSQL)
-
-```bash
-docker compose exec postgres pg_dump -U passwordpusher_user passwordpusher_db > pwpush-$(date +%Y%m%d).sql
-```
-
-### Limpiar y comenzar desde cero
-
-```bash
-docker compose down -v  # Elimina contenedores, redes y volúmenes
-# Luego vuelve a levantar con: docker compose up -d
-```
+| Acción | Comando |
+|--------|---------|
+| **Ver logs** | `docker compose logs -f pwpush` |
+| **Backup (PostgreSQL)** | `docker compose exec postgres pg_dump -U passwordpusher_user passwordpusher_db > pwpush-$(date +%Y%m%d).sql` |
+| **Reiniciar** | `docker compose restart` |
+| **Actualizar** | `docker compose pull && docker compose up -d` |
+| **Monitorear consumo** | `docker stats passwordpusher` |
+| **Purgar pushes expirados** | Configurar `PWP__PURGE_AFTER="2 weeks"` en environment |
 
 ## 📝 Licencia
 
-Este proyecto se basa en [PasswordPusher](https://github.com/pglombardo/PasswordPusher), licenciado bajo Apache 2.0. La configuración y documentación proporcionada aquí está bajo la [MIT License](https://github.com/JLalib/passwordpusher-docker/blob/main/LICENSE).
+**Apache License 2.0** - Open source, sin telemetría, auditable.
+
+[Ver licencia completa](https://github.com/pglombardo/PasswordPusher/blob/master/LICENSE)
 
 ---
 
-> ✨ **Nota**: Este repositorio contiene la configuración Docker y documentación extraída del tutorial de Genbyte: <a href="https://genbyte.blogspot.com/2026/07/como-instalar-passwordpusher-en-docker.html" target="_blank" rel="noopener noreferrer">Cómo instalar PasswordPusher en Docker - Compartidor seguro de contraseñas autohospedado en Docker</a>
+> 📖 **Basado en el post:** [Cómo instalar PasswordPusher en Docker - Compartidor seguro de contraseñas autohospedado en Docker](https://genbyte.blogspot.com/2026/07/como-instalar-passwordpusher-en-docker.html)
